@@ -1,78 +1,50 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using MapApplication.Data;
+using MapApplication.Services;
+using MapApplication.Services.Responses;
+using System.Drawing;
 
 namespace MapApplication.Controllers {
     [Route("api/[controller]")]
     [ApiController]
     public class PointController : ControllerBase {
 
-        private static readonly List<Point> points = new List<Point>();
+        private readonly IPointRepository _pointRepository;
+
+        public PointController(IPointRepository pointRepository) {
+            _pointRepository = pointRepository;
+        }
 
         [HttpGet]
-
-        public List<Point> GetAll() {
-            return points;
+        public ApiResponse<List<Point>> GetAll() {
+            var response = _pointRepository.GetAll();
+            return response;
         }
 
-        [HttpGet("GetById")]
-        public ActionResult<Point> GetById(int Id) {
-            if (Id <= 0) {
-                return NotFound("Invalid Id!");
-            }
-
-            Point point = points.FirstOrDefault(u => u.Id == Id);
-            if (point == null) {
-                return NotFound("Not Found");
-            }
-
-            return point;
-
+        [HttpGet("{id}")]
+        public ApiResponse<Point> GetById(int id) {
+            var response = _pointRepository.GetById(id);
+            return response;
         }
 
-        
-        [HttpPost("Update")]
-        public ActionResult Update(Point point) {
 
-            var item = points.FirstOrDefault(u => u.Id == point.Id);
-
-            if (item == null) {
-
-                return NotFound();
-            }
-
-            item.X = point.X;
-            item.Y = point.Y;
-            item.Name = point.Name;
-
-            return Ok(item);
+        [HttpPut("{id}")]
+        public ApiResponse Update(int id,Point point) {
+            var response = _pointRepository.Update(id, point);
+            return response;
         }
 
         [HttpDelete("Delete/{id}")]
-        public ActionResult Delete(int id) {
-
-            var item = points.FirstOrDefault(u => u.Id == id);
-
-            if (item == null) {
-
-                return NotFound();
-            }
-
-            points.Remove(item);
-
-            return Ok($"Deleted Item's Name: {item.Name}");
+        public ApiResponse Delete(int id) {
+            var response = _pointRepository.Delete(id);
+            return response;
         }
 
         [HttpPost]
-        public Point Add(Point point) {
-            var item = new Point();
-
-            item.Id = point.Id;
-            item.X = point.X;
-            item.Y = point.Y;
-            item.Name = point.Name;
-            points.Add(item);
-
-            return item;
+        public ApiResponse<Point> Add(Point point) {
+            var response = _pointRepository.Add(point);
+            return response;
         }
 
     }

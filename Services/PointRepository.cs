@@ -9,6 +9,8 @@ namespace MapApplication.Services {
 
         public ApiResponse<List<Point>> GetAll() {
             try {
+                //validation boş ise hata
+                //her seferinde new ApiResponse demeye gerek yok
                 var points = TestData.points;
                 var response = new ApiResponse<List<Point>>(true, "Points retrieved successfully", points);
                 return response;
@@ -100,12 +102,13 @@ namespace MapApplication.Services {
 
         public ApiResponse<Point> Add(Point point) {
             try {
-                if (TestData.points.FirstOrDefault(x => x.Name.ToLower() == point.Name.ToLower()) != null) {
-                    return new ApiResponse<Point>(false, "Point already exists!", point);
-                }
+                //if (TestData.points.FirstOrDefault(x => x.Name.ToLower() == point.Name.ToLower()) != null) {
+                //    return new ApiResponse<Point>(false, "Point already exists!", point);
+                //}
 
                 var Point = new Point();
 
+                //liste boş ise geç
                 point.Id = TestData.points.OrderByDescending(x => x.Id).FirstOrDefault().Id + 1;
 
                 TestData.points.Add(point);

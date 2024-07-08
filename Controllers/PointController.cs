@@ -36,7 +36,7 @@ namespace MapApplication.Controllers {
         }
 
         [HttpDelete("Delete/{id}")]
-        public ApiResponse Delete(int id) {
+        public ApiResponse<Point> Delete(int id) {
             var response = _pointRepository.Delete(id);
             return response;
         }

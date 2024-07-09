@@ -30,7 +30,7 @@ namespace MapApplication.Controllers {
 
 
         [HttpPut("{id}")]
-        public ApiResponse Update(int id,Point point) {
+        public ApiResponse<Point> Update(int id,Point point) {
             var response = _pointRepository.Update(id, point);
             return response;
         }

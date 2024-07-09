@@ -7,13 +7,23 @@ using Microsoft.AspNetCore.Mvc;
 namespace MapApplication.Services {
     public class PointRepository : IPointRepository {
 
+
+        readonly ApiResponse<List<Point>> customResponse = new ApiResponse<List<Point>>(false, null, null);
+
         public ApiResponse<List<Point>> GetAll() {
             try {
                 //validation boş ise hata
-                //her seferinde new ApiResponse demeye gerek yok
+                if(TestData.points == null) {
+                    customResponse.Success = false;
+                    customResponse.Message = "List is empty";
+                    return customResponse;
+                }
+                //her seferinde new ApiResponse demeye gerek yok ??
                 var points = TestData.points;
-                var response = new ApiResponse<List<Point>>(true, "Points retrieved successfully", points);
-                return response;
+                customResponse.Success = true;
+                customResponse.Message = "Points retrieved successfully";
+                customResponse.Data = points;
+                return customResponse;
 
             } catch (Exception ex) {
 
@@ -102,19 +112,21 @@ namespace MapApplication.Services {
 
         public ApiResponse<Point> Add(Point point) {
             try {
-                //if (TestData.points.FirstOrDefault(x => x.Name.ToLower() == point.Name.ToLower()) != null) {
-                //    return new ApiResponse<Point>(false, "Point already exists!", point);
-                //}
-
                 var Point = new Point();
 
                 //liste boş ise geç
-                point.Id = TestData.points.OrderByDescending(x => x.Id).FirstOrDefault().Id + 1;
+                if (TestData.points != null) {
+                    point.Id = TestData.points.OrderByDescending(x => x.Id).FirstOrDefault().Id + 1;
+                } 
 
-                TestData.points.Add(point);
+                if (point.Id > 0) {
+                    TestData.points.Add(point);
+                    var succesResponse = new ApiResponse<Point>(true, "Point added succesfully", point);
+                    return succesResponse;
+                }
 
-                var response = new ApiResponse<Point>(true, "Point added succesfully", point);
-                return response;
+                var errorResponse = new ApiResponse<Point>(false, "Invalid Id", point);
+                return errorResponse;
 
             } catch (Exception ex) {
 

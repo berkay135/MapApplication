@@ -9,6 +9,7 @@ using Npgsql;
 using System.Data;
 using System.Data.SqlClient;
 
+
 namespace MapApplication.Services {
     public class PointRepository : IPointRepository {
 
@@ -16,31 +17,21 @@ namespace MapApplication.Services {
         public PointRepository(AppDbContext db) {
             _db = db;
         }
-        string connectionString = "Host=localhost; Database=MapApplication; Username=postgres; Password=admin";
-
-        readonly ApiResponse<List<Point>> customResponse = new ApiResponse<List<Point>>(false, null, null);
+        
+        //string connectionString = "Host=localhost; Database=MapApplication; Username=postgres; Password=admin";
 
         public ApiResponse<List<Point>> GetAll() {
             try {
                 //validation boş ise hata
                 if (_db.Points == null) {
-                    customResponse.Success = false;
-                    customResponse.Message = "List is empty";
-                    return customResponse;
+                    return ApiResponse<List<Point>>.ErrorResponse("List is Empty");
                 }
-                //her seferinde new ApiResponse demeye gerek yok ??
-                var points = _db.Points.ToList();
-                customResponse.Success = true;
-                customResponse.Message = "Points retrieved successfully";
-                customResponse.Data = points;
-                return customResponse;
+                
+                var points = _db.Points.OrderBy(x => x.Id).ToList();
+                return ApiResponse<List<Point>>.SuccessResponse("Points Successfuly retrieved", points);
 
             } catch (Exception ex) {
-
-                Console.Error.WriteLine($"An error occurred: {ex.Message}");
-
-                var errorResponse = new ApiResponse<List<Point>>(false, "Unexpected Error", null);
-                return errorResponse;
+                return ApiResponse<List<Point>>.ErrorResponse($"An error occurred: {ex.Message}");
             }
 
         }
@@ -48,24 +39,16 @@ namespace MapApplication.Services {
         public ApiResponse<Point> GetById(int Id) {
             try {
                 if (Id <= 0) {
-                    var badResponse = new ApiResponse<Point>(false, "Invalid Id!", null);
-                    return badResponse;
+                    return ApiResponse<Point>.ErrorResponse("Invalid Id");
                 }
-
                 var point = _db.Points.ToList().FirstOrDefault(p => p.Id == Id);
                 if (point == null) {
-                    var notFoundResponse = new ApiResponse<Point>(false, "Not Found", null);
-                    return notFoundResponse;
+                    return ApiResponse<Point>.ErrorResponse("Not found");
                 }
-
-                var response = new ApiResponse<Point>(true, "Point retrieved successfully", point);
-                return response;
+                return ApiResponse<Point>.SuccessResponse("Point Successfuly retrieved", point);
             } catch (Exception ex) {
 
-                Console.Error.WriteLine($"An error occurred: {ex.Message}");
-
-                var errorResponse = new ApiResponse<Point>(false, "Unexpected Error", null);
-                return errorResponse;
+                return ApiResponse<Point>.ErrorResponse($"An error occurred: {ex.Message}");
             }
 
         }
@@ -74,13 +57,11 @@ namespace MapApplication.Services {
         public ApiResponse<Point> Update(int id, Point point) {
             try {
                 if (point == null || id != point.Id) {
-                    var badResponse = new ApiResponse<Point>(false, "Invalid Id!", null);
-                    return badResponse;
+                    return ApiResponse<Point>.ErrorResponse("Invalid Id");
                 }
                 Point pointFromDb = _db.Points.ToList().FirstOrDefault(x => x.Id == id);
                 if (pointFromDb == null) {
-                    var notFoundResponse = new ApiResponse<Point>(false, "Not Found", null);
-                    return notFoundResponse;
+                    return ApiResponse<Point>.ErrorResponse("Not found");
                 }
                 pointFromDb.X = point.X;
                 pointFromDb.Y = point.Y;
@@ -88,8 +69,7 @@ namespace MapApplication.Services {
 
                 _db.SaveChanges();
 
-                var response = new ApiResponse<Point>(true, "Point updated succesfully", pointFromDb);
-                return response;
+                return ApiResponse<Point>.SuccessResponse("Point Successfuly uptaded", point);
             } catch (Exception ex) {
 
                 Console.Error.WriteLine($"An error occurred: {ex.Message}");
@@ -108,19 +88,15 @@ namespace MapApplication.Services {
 
                 if (item == null) {
 
-                    var notFoundResponse = new ApiResponse<Point>(false, "Not Found", null);
+                    return ApiResponse<Point>.ErrorResponse("Not found");
                 }
 
                 _db.Points.Remove(item);
                 _db.SaveChanges();
-                var response = new ApiResponse<Point>(true, "Point deleted succesfully", item);
-                return response;
+                return ApiResponse<Point>.SuccessResponse("Point Successfuly Deleted", item);
             } catch (Exception ex) {
 
-                Console.Error.WriteLine($"An error occurred: {ex.Message}");
-
-                var errorResponse = new ApiResponse<Point>(false, "Unexpected Error", null);
-                return errorResponse;
+                return ApiResponse<Point>.ErrorResponse($"An error occurred: {ex.Message}");
             }
 
 
@@ -130,27 +106,12 @@ namespace MapApplication.Services {
             try {
                 var Point = new Point();
 
-                //liste boş ise geç
-                if (_db.Points.ToList() != null) {
-                    point.Id = _db.Points.ToList().OrderByDescending(x => x.Id).FirstOrDefault().Id + 1;
-                }
-
-
                 _db.Points.Add(point);
                 _db.SaveChanges();
-                var succesResponse = new ApiResponse<Point>(true, "Point added succesfully", point);
-                return succesResponse;
-
-
-                //var errorResponse = new ApiResponse<Point>(false, "Invalid Id", point);
-                //return errorResponse;
-
+                return ApiResponse<Point>.SuccessResponse("Point Successfuly Added", point);
             } catch (Exception ex) {
 
-                Console.Error.WriteLine($"An error occurred: {ex.Message}");
-
-                var errorResponse = new ApiResponse<Point>(false, "Unexpected Error", null);
-                return errorResponse;
+                return ApiResponse<Point>.ErrorResponse($"An error occurred: {ex.Message}");
             }
 
         }

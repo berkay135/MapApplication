@@ -1,4 +1,5 @@
-﻿namespace MapApplication.Services.Responses {
+﻿
+namespace MapApplication.Services.Responses {
     public class ApiResponse<T> {
         public bool Success { get; set; }
         public string Message { get; set; }
@@ -20,7 +21,6 @@
         public static ApiResponse<T> ErrorResponse(string message) {
             return new ApiResponse<T>(false, message, default(T));
         }
-
     }
 }
 

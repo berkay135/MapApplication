@@ -9,50 +9,15 @@ using System.Data.SqlClient;
 
 
 namespace MapApplication.Services {
-    public class PointRepository : IPointRepository {
+    public class PointRepository : Repository<Point> , IPointRepository {
 
         private AppDbContext _db;
-        public PointRepository(AppDbContext db) {
+        public PointRepository(AppDbContext db)  : base(db) {
             _db = db;
         }
-        
-        //string connectionString = "Host=localhost; Database=MapApplication; Username=postgres; Password=admin";
-
-        public ApiResponse<List<Point>> GetAll() {
-            try {
-                //boş ise hata
-                if (_db.Points == null) {
-                    return ApiResponse<List<Point>>.ErrorResponse("List is Empty");
-                }
-                
-                var points = _db.Points.OrderBy(x => x.Id).ToList();
-                return ApiResponse<List<Point>>.SuccessResponse("Points Successfuly retrieved", points);
-
-            } catch (Exception ex) {
-                return ApiResponse<List<Point>>.ErrorResponse($"An error occurred: {ex.Message}");
-            }
-
-        }
-
-        public ApiResponse<Point> GetById(int Id) {
-            try {
-                if (Id <= 0) {
-                    return ApiResponse<Point>.ErrorResponse("Invalid Id");
-                }
-                var point = _db.Points.ToList().FirstOrDefault(p => p.Id == Id);
-                if (point == null) {
-                    return ApiResponse<Point>.ErrorResponse("Not found");
-                }
-                return ApiResponse<Point>.SuccessResponse("Point Successfuly retrieved", point);
-            } catch (Exception ex) {
-
-                return ApiResponse<Point>.ErrorResponse($"An error occurred: {ex.Message}");
-            }
-
-        }
-
 
         public ApiResponse<Point> Update(int id, Point point) {
+
             try {
                 if (point == null || id != point.Id) {
                     return ApiResponse<Point>.ErrorResponse("Invalid Id");
@@ -65,8 +30,6 @@ namespace MapApplication.Services {
                 pointFromDb.Y = point.Y;
                 pointFromDb.Name = point.Name;
 
-                _db.SaveChanges();
-
                 return ApiResponse<Point>.SuccessResponse("Point Successfuly uptaded", point);
             } catch (Exception ex) {
 
@@ -75,44 +38,110 @@ namespace MapApplication.Services {
                 var errorResponse = new ApiResponse<Point>(false, "Unexpected Error", null);
                 return errorResponse;
             }
-
         }
 
-        
 
-        public ApiResponse<Point> Delete(int id) {
-            try {
-                var item = _db.Points.ToList().FirstOrDefault(u => u.Id == id);
+        //private AppDbContext _db;
+        //public PointRepository(AppDbContext db) {
+        //    _db = db;
+        //}
 
-                if (item == null) {
+            ////string connectionString = "Host=localhost; Database=MapApplication; Username=postgres; Password=admin";
 
-                    return ApiResponse<Point>.ErrorResponse("Not found");
-                }
+            //public ApiResponse<List<Point>> GetAll() {
+            //    try {
+            //        //boş ise hata
+            //        if (_db.Points == null) {
+            //            return ApiResponse<List<Point>>.ErrorResponse("List is Empty");
+            //        }
 
-                _db.Points.Remove(item);
-                _db.SaveChanges();
-                return ApiResponse<Point>.SuccessResponse("Point Successfuly Deleted", item);
-            } catch (Exception ex) {
+            //        var points = _db.Points.OrderBy(x => x.Id).ToList();
+            //        return ApiResponse<List<Point>>.SuccessResponse("Points Successfuly retrieved", points);
 
-                return ApiResponse<Point>.ErrorResponse($"An error occurred: {ex.Message}");
-            }
+            //    } catch (Exception ex) {
+            //        return ApiResponse<List<Point>>.ErrorResponse($"An error occurred: {ex.Message}");
+            //    }
+
+            //}
+
+            //public ApiResponse<Point> GetById(int Id) {
+            //    try {
+            //        if (Id <= 0) {
+            //            return ApiResponse<Point>.ErrorResponse("Invalid Id");
+            //        }
+            //        var point = _db.Points.ToList().FirstOrDefault(p => p.Id == Id);
+            //        if (point == null) {
+            //            return ApiResponse<Point>.ErrorResponse("Not found");
+            //        }
+            //        return ApiResponse<Point>.SuccessResponse("Point Successfuly retrieved", point);
+            //    } catch (Exception ex) {
+
+            //        return ApiResponse<Point>.ErrorResponse($"An error occurred: {ex.Message}");
+            //    }
+
+            //}
 
 
-        }
+            //public ApiResponse<Point> Update(int id, Point point) {
+            //    try {
+            //        if (point == null || id != point.Id) {
+            //            return ApiResponse<Point>.ErrorResponse("Invalid Id");
+            //        }
+            //        Point pointFromDb = _db.Points.ToList().FirstOrDefault(x => x.Id == id);
+            //        if (pointFromDb == null) {
+            //            return ApiResponse<Point>.ErrorResponse("Not found");
+            //        }
+            //        pointFromDb.X = point.X;
+            //        pointFromDb.Y = point.Y;
+            //        pointFromDb.Name = point.Name;
 
-        public ApiResponse<Point> Add(Point point) {
-            try {
-                var Point = new Point();
+            //        _db.SaveChanges();
 
-                _db.Points.Add(point);
-                _db.SaveChanges();
-                return ApiResponse<Point>.SuccessResponse("Point Successfuly Added", point);
-            } catch (Exception ex) {
+            //        return ApiResponse<Point>.SuccessResponse("Point Successfuly uptaded", point);
+            //    } catch (Exception ex) {
 
-                return ApiResponse<Point>.ErrorResponse($"An error occurred: {ex.Message}");
-            }
+            //        Console.Error.WriteLine($"An error occurred: {ex.Message}");
 
-        }
+            //        var errorResponse = new ApiResponse<Point>(false, "Unexpected Error", null);
+            //        return errorResponse;
+            //    }
+
+            //}
+
+
+
+            //public ApiResponse<Point> Delete(int id) {
+            //    try {
+            //        var item = _db.Points.ToList().FirstOrDefault(u => u.Id == id);
+
+            //        if (item == null) {
+
+            //            return ApiResponse<Point>.ErrorResponse("Not found");
+            //        }
+
+            //        _db.Points.Remove(item);
+            //        _db.SaveChanges();
+            //        return ApiResponse<Point>.SuccessResponse("Point Successfuly Deleted", item);
+            //    } catch (Exception ex) {
+
+            //        return ApiResponse<Point>.ErrorResponse($"An error occurred: {ex.Message}");
+            //    }
+
+
+            //}
+
+            //public ApiResponse<Point> Add(Point point) {
+            //    try {
+            //        var Point = new Point();
+
+            //        _db.Points.Add(point);
+            //        _db.SaveChanges();
+            //        return ApiResponse<Point>.SuccessResponse("Point Successfuly Added", point);
+            //    } catch (Exception ex) {
+
+            //        return ApiResponse<Point>.ErrorResponse($"An error occurred: {ex.Message}");
+
+    }
         //CRUD OPERATIONS WITH SQL
         //    public ApiResponse<Point> Add(Point newPoint) {
         //        ApiResponse<Point> response = new ApiResponse<Point>(false, "Add failed", null);
@@ -291,5 +320,6 @@ namespace MapApplication.Services {
 
 
     }
-}
+
+
 

@@ -8,42 +8,44 @@ using System.Drawing;
 namespace MapApplication.Controllers {
     [Route("api/[controller]")]
     [ApiController]
-    public class PointController : ControllerBase {
+    public class PointController : Controller {
 
-        private readonly IPointRepository _pointRepository;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public PointController(IPointRepository pointRepository) {
-            _pointRepository = pointRepository;
+        public PointController(IUnitOfWork unitOfWork) {
+            _unitOfWork = unitOfWork;
         }
 
         [HttpGet]
         public ApiResponse<List<Point>> GetAll() {
-            var response = _pointRepository.GetAll();
-            return response;
+            return _unitOfWork.Point.GetAll();
         }
 
         [HttpGet("{id}")]
         public ApiResponse<Point> GetById(int id) {
-            var response = _pointRepository.GetById(id);
-            return response;
+            return _unitOfWork.Point.GetById(id);
         }
 
 
-        [HttpPut]
+        [HttpPut("{id}")]
         public ApiResponse<Point> Update(int id,Point point) {
-            var response = _pointRepository.Update(id, point);
+            var response = _unitOfWork.Point.Update(id, point);
+            _unitOfWork.Save();
             return response;
         }
 
         [HttpDelete("Delete/{id}")]
         public ApiResponse<Point> Delete(int id) {
-            var response = _pointRepository.Delete(id);
+            var response = _unitOfWork.Point.Delete(id);
+            _unitOfWork.Save();
             return response;
+            
         }
 
         [HttpPost]
         public ApiResponse<Point> Add(Point point) {
-            var response = _pointRepository.Add(point);
+            var response =  _unitOfWork.Point.Add(point);
+            _unitOfWork.Save();
             return response;
         }
 

@@ -1,6 +1,4 @@
-﻿
-
-using MapApplication.Data;
+﻿using MapApplication.Data;
 using MapApplication.Services.Responses;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.TagHelpers;
@@ -22,7 +20,7 @@ namespace MapApplication.Services {
 
         public ApiResponse<List<Point>> GetAll() {
             try {
-                //validation boş ise hata
+                //boş ise hata
                 if (_db.Points == null) {
                     return ApiResponse<List<Point>>.ErrorResponse("List is Empty");
                 }

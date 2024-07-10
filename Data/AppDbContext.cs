@@ -14,5 +14,13 @@ namespace MapApplication.Data {
         }
 
         public DbSet<Point> Points { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder) {
+            base.OnModelCreating(modelBuilder);
+            modelBuilder.Entity<Point>().HasData(
+                    new Point { Id = 1, X = 123, Y = 456, Name = "FromDbAnkara" },
+                    new Point { Id = 2, X = 345, Y = 567, Name = "Bursa" }
+                );
+        }
     }
 }

@@ -59,6 +59,35 @@ namespace MapApplication.Migrations
                             Y = 567.0
                         });
                 });
+
+            modelBuilder.Entity("MapApplication.Polygon", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Wkt")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Polygons");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Name = "AreaTest",
+                            Wkt = "POLYGON((10.689 -25.092, 34.595 -20.170, 38.814 -35.639, 13.502 -39.155, 10.689 -25.092))"
+                        });
+                });
 #pragma warning restore 612, 618
         }
     }

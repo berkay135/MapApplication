@@ -42,8 +42,8 @@ namespace MapApplication.Services {
         public ApiResponse<List<T>> GetAll() {
             try {
                 IQueryable<T> query = dbSet;
-                //boş ise hata
-                if (dbSet == null) {
+
+                if (dbSet.Count() == 0) {
                     return ApiResponse<List<T>>.ErrorResponse("List is Empty");
                 }
 

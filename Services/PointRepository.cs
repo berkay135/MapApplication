@@ -26,8 +26,8 @@ namespace MapApplication.Services {
                 if (pointFromDb == null) {
                     return ApiResponse<Point>.ErrorResponse("Not found");
                 }
-                pointFromDb.X = point.X;
-                pointFromDb.Y = point.Y;
+
+                pointFromDb.Wkt = point.Wkt;
                 pointFromDb.Name = point.Name;
 
                 return ApiResponse<Point>.SuccessResponse("Point Successfuly uptaded", point);

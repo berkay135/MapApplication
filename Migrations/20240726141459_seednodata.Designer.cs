@@ -2,6 +2,7 @@
 using MapApplication.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -10,9 +11,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MapApplication.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240726141459_seednodata")]
+    partial class seednodata
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -40,20 +43,6 @@ namespace MapApplication.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Points");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Name = "AreaTest",
-                            Wkt = "POLYGON((10.689 -25.092, 34.595 -20.170, 38.814 -35.639, 13.502 -39.155, 10.689 -25.092))"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Name = "PointTest",
-                            Wkt = "POINT((34, 34))"
-                        });
                 });
 #pragma warning restore 612, 618
         }

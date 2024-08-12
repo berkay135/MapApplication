@@ -179,84 +179,85 @@ map.on('click', function (evt) {
       let updatedPoint;
 
       //Update by Moving
-      modify.on('modifyend', async function (evt) {
-
-        if (geometryType == 'Point') {
-          const coordinates = feature.getGeometry().getCoordinates();
-          const [lon, lat] = toLonLat(coordinates); 
-      
-          const format = new WKT();
-      
-          const pointGeometry = new Point([parseFloat(lon), parseFloat(lat)]);
-          const wktPoint = format.writeGeometry(pointGeometry);
-
-          updatedPoint = {
-            id: feature.get('id'),
-            name: feature.get('name'), 
-            wkt: wktPoint,
-          };
-        } 
-          try {
-            const response = await fetch(`https://localhost:7235/api/Point/${updatedPoint.id}`, {
-              method: 'PUT',
-              headers: {
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify(updatedPoint)
-            });
-      
-            if (!response.ok) {
-              throw new Error(`HTTP error! status: ${response.status}`);
-            }
-      
-            const result = await response.json();
-            console.log('Point updated successfully:', result);
-            success(result.message);
-            map.removeInteraction(modify);
-            getPoints();
-      
-          } catch (error) {
-            console.error('Error updating point:', error);
-          }
-        
-      });
-    });
-
-    document.getElementById('manuel-update-point').addEventListener('click', function () {
-      const modify = new Modify({
-        source: source,
-        hitDetection: vector,
-      });
-      map.addInteraction(modify);
-      overlay.setPosition(undefined);
-    
-      modify.on('modifyend', function (evt) {
-        console.log('Editing finished, click inside the polygon to open the panel');
-      });
-
-      shouldShowPopup = false;
-    
-      map.on('singleclick', function (evt) {
-        map.forEachFeatureAtPixel(evt.pixel, function (feature) {
-          if (feature.getGeometry().getType() === 'Polygon') {
+      if (geometryType == 'Point') {
+        modify.on('modifyend', async function (evt) {
             const coordinates = feature.getGeometry().getCoordinates();
+            const [lon, lat] = toLonLat(coordinates); 
+        
             const format = new WKT();
-            const polygonGeometry = feature.getGeometry();
-            const wktPolygon = format.writeGeometry(polygonGeometry);
-
-            showJsPanelForModify({
+        
+            const pointGeometry = new Point([parseFloat(lon), parseFloat(lat)]);
+            const wktPoint = format.writeGeometry(pointGeometry);
+  
+            updatedPoint = {
               id: feature.get('id'),
-              name: feature.get('name'),
-              wkt: wktPolygon,
-            });
-          }
+              name: feature.get('name'), 
+              wkt: wktPoint,
+            };
+          
+            try {
+              const response = await fetch(`https://localhost:7235/api/Point/${updatedPoint.id}`, {
+                method: 'PUT',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(updatedPoint)
+              });
+        
+              if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+              }
+        
+              const result = await response.json();
+              console.log('Point updated successfully:', result);
+              success(result.message);
+              map.removeInteraction(modify);
+              getPoints();
+        
+            } catch (error) {
+              console.error('Error updating point:', error);
+            }
+          
         });
-      });
+      } else if (geometryType == 'Polygon') {
+        const modify = new Modify({
+          source: source,
+          hitDetection: vector,
+        });
+  
+        map.addInteraction(modify);
+        overlay.setPosition(undefined);
+  
+        if (geometryType == 'Polygon') {
+          modify.on('modifyend', function (evt) {
+            console.log('Editing finished, click inside the polygon to open the panel');
+          });
+        }
+  
+        shouldShowPopup = false;
+      
+        map.on('singleclick', function (evt) {
+          map.forEachFeatureAtPixel(evt.pixel, function (feature) {
+            if (feature.getGeometry().getType() === 'Polygon') {
+              const coordinates = feature.getGeometry().getCoordinates();
+              const format = new WKT();
+              const polygonGeometry = feature.getGeometry();
+              const wktPolygon = format.writeGeometry(polygonGeometry);
+  
+              showJsPanelForModify({
+                id: feature.get('id'),
+                name: feature.get('name'),
+                wkt: wktPolygon,
+              });
+            }
+          });
+        });
+      } else {
+        overlay.setPosition(undefined);
+      }
+      
     });
-
-  } else {
-    overlay.setPosition(undefined);
-  }
+  } 
 });
 
 
@@ -303,6 +304,7 @@ function showJsPanelForModify(updatedPoint) {
           getPoints();
 
           panel.close();
+          return;
 
         } catch (error) {
           console.error('Error updating polygon:', error);
@@ -382,11 +384,15 @@ addPointButton.addEventListener('click', () => {
   if (drawingMode === 'point') {
     disableInteraction();
     setButtonState(addPointButton, false);
+    console.log("Should Show PopUp?: "+ shouldShowPopup);
+    shouldShowPopup = true;
   } else {
     drawingMode = 'point';
     enablePointInteraction();
     setButtonState(addPointButton, true);
     setButtonState(addPolygonButton, false);
+    console.log("Should Show PopUp?: "+ shouldShowPopup);
+    shouldShowPopup = false;
   }
 });
 
@@ -394,11 +400,13 @@ addPolygonButton.addEventListener('click', () => {
   if (drawingMode === 'polygon') {
     disableInteraction();
     setButtonState(addPolygonButton, false);
+    shouldShowPopup = true;
   } else {
     drawingMode = 'polygon';
     enablePolygonInteraction();
     setButtonState(addPolygonButton, true);
     setButtonState(addPointButton, false);
+    shouldShowPopup = false;
   }
 });
 
@@ -754,8 +762,7 @@ function handleDeleteClick(event) {
 
 function handleManualUpdateClick(event) {
 
-    
-
+  
   const id = event.target.getAttribute('data-id');
   const feature = source.getFeatureById(id);
   console.log(feature);
@@ -800,38 +807,15 @@ function handleManualUpdateClick(event) {
     source: source,
     hitDetection: vector,
   });
+
+  let updatedPoint;
+
   map.addInteraction(modify);
 
   overlay.setPosition(undefined);
 
-  modify.on('modifyend', function (evt) {
-    console.log('Editing finished, click inside the polygon to open the panel');
-  });
-
-  shouldShowPopup = false;
-
-  map.on('singleclick', function (evt) {
-    map.forEachFeatureAtPixel(evt.pixel, function (feature) {
-      if (feature.getGeometry().getType() === 'Polygon') {
-        const coordinates = feature.getGeometry().getCoordinates();
-        const format = new WKT();
-        const polygonGeometry = feature.getGeometry();
-        const wktPolygon = format.writeGeometry(polygonGeometry);
-
-        showJsPanelForModify({
-          id: feature.get('id'),
-          name: feature.get('name'),
-          wkt: wktPolygon,
-        });
-      }
-    });
-  });
-  
-  if (feature.getType() === 'Point'){
+  if (geometryType == 'Point') {
     modify.on('modifyend', async function (evt) {
-      const features = evt.features.getArray();
-    
-      for (const feature of features) {
         const coordinates = feature.getGeometry().getCoordinates();
         const [lon, lat] = toLonLat(coordinates); 
     
@@ -839,13 +823,13 @@ function handleManualUpdateClick(event) {
     
         const pointGeometry = new Point([parseFloat(lon), parseFloat(lat)]);
         const wktPoint = format.writeGeometry(pointGeometry);
-    
-        const updatedPoint = {
+
+        updatedPoint = {
           id: feature.get('id'),
           name: feature.get('name'), 
           wkt: wktPoint,
         };
-    
+      
         try {
           const response = await fetch(`https://localhost:7235/api/Point/${updatedPoint.id}`, {
             method: 'PUT',
@@ -868,11 +852,44 @@ function handleManualUpdateClick(event) {
         } catch (error) {
           console.error('Error updating point:', error);
         }
-      }
+      
     });
-  }
-  
+  } else if (geometryType == 'Polygon') {
+    const modify = new Modify({
+      source: source,
+      hitDetection: vector,
+    });
 
+    map.addInteraction(modify);
+    overlay.setPosition(undefined);
+
+    if (geometryType == 'Polygon') {
+      modify.on('modifyend', function (evt) {
+        console.log('Editing finished, click inside the polygon to open the panel');
+      });
+    }
+
+    shouldShowPopup = false;
+  
+    map.on('singleclick', function (evt) {
+      map.forEachFeatureAtPixel(evt.pixel, function (feature) {
+        if (feature.getGeometry().getType() === 'Polygon') {
+          const coordinates = feature.getGeometry().getCoordinates();
+          const format = new WKT();
+          const polygonGeometry = feature.getGeometry();
+          const wktPolygon = format.writeGeometry(polygonGeometry);
+
+          showJsPanelForModify({
+            id: feature.get('id'),
+            name: feature.get('name'),
+            wkt: wktPolygon,
+          });
+        }
+      });
+    });
+  } else {
+    overlay.setPosition(undefined);
+  }
 }
 
 async function fetchAndDisplayData() {
@@ -913,9 +930,8 @@ async function fetchAndDisplayData() {
 
     document.addEventListener("DOMContentLoaded", function() {
       const cells = document.querySelectorAll('.truncated');
-      console.log("?????");
       cells.forEach(cell => {
-        const maxLength = 20; // Adjust the max length as needed
+        const maxLength = 20;
         const text = cell.textContent || cell.innerText;
         if (text.length > maxLength) {
           cell.textContent = text.substring(0, maxLength) + '...';

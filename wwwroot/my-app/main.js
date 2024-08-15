@@ -1,5 +1,5 @@
 import './style.css';
-import { success } from './notification.mjs';
+import { toastrSuccess, toastrError, toastrInfo} from './notification.mjs';
 import { Map, View } from 'ol';
 import Feature from 'ol/Feature';
 import TileLayer from 'ol/layer/Tile';
@@ -25,6 +25,8 @@ import { ColorType } from 'ol/expr/expression';
 const container = document.getElementById('popup');
 const content = document.getElementById('popup-content');
 const closer = document.getElementById('popup-closer');
+
+let modify;
 
 const overlay = new Overlay({
   element: container,
@@ -130,13 +132,14 @@ map.on('click', function (evt) {
     
         const result = await response.json();
         console.log('Point updated successfully:', result);
-        success(result.message);
+        toastrSuccess(result.message);
     
         source.clear();
         getPoints();
         overlay.setPosition(undefined);
     
       } catch (error) {
+        toastrError('Error updating point:', error);
         console.error('Error updating point:', error);
       }
     });
@@ -155,7 +158,7 @@ map.on('click', function (evt) {
 
         const result = await response.json();
         console.log('Point deleted successfully:', result);
-        success(result.message);
+        toastrSuccess(result.message);
 
         source.clear();
         getPoints();
@@ -210,7 +213,7 @@ map.on('click', function (evt) {
         
               const result = await response.json();
               console.log('Point updated successfully:', result);
-              success(result.message);
+              toastrSuccess(result.message);
               map.removeInteraction(modify);
               getPoints();
         
@@ -228,9 +231,12 @@ map.on('click', function (evt) {
         map.addInteraction(modify);
         overlay.setPosition(undefined);
   
+        let panelOpened = false;
+
         if (geometryType == 'Polygon') {
           modify.on('modifyend', function (evt) {
             console.log('Editing finished, click inside the polygon to open the panel');
+            panelOpened = false;
           });
         }
   
@@ -238,7 +244,7 @@ map.on('click', function (evt) {
       
         map.on('singleclick', function (evt) {
           map.forEachFeatureAtPixel(evt.pixel, function (feature) {
-            if (feature.getGeometry().getType() === 'Polygon') {
+            if (feature.getGeometry().getType() === 'Polygon' && !panelOpened) {
               const coordinates = feature.getGeometry().getCoordinates();
               const format = new WKT();
               const polygonGeometry = feature.getGeometry();
@@ -249,6 +255,7 @@ map.on('click', function (evt) {
                 name: feature.get('name'),
                 wkt: wktPolygon,
               });
+              panelOpened = true;
             }
           });
         });
@@ -260,10 +267,10 @@ map.on('click', function (evt) {
   } 
 });
 
-
+let panelShowJsPanleForModify;
 //for showing panel upon clicking in area 
 function showJsPanelForModify(updatedPoint) {
-  const panel = jsPanel.create({
+  panelShowJsPanleForModify = jsPanel.create({
     headerTitle: 'Edit Polygon',
     contentSize: '400 200',
     content: `
@@ -282,7 +289,7 @@ function showJsPanelForModify(updatedPoint) {
         const nameInput = panel.content.querySelector('#edit-name');
         updatedPoint.name = nameInput.value;
 
-        panel.close();
+        panelShowJsPanleForModify.close();
 
         try {
           const response = await fetch(`https://localhost:7235/api/Point/${updatedPoint.id}`, {
@@ -299,11 +306,12 @@ function showJsPanelForModify(updatedPoint) {
 
           const result = await response.json();
           console.log('Polygon updated successfully:', result);
-          success(result.message);
+          toastrSuccess(result.message);
           map.removeInteraction(modify);
           getPoints();
+          shouldShowPopup = true;
 
-          panel.close();
+          // panel.close();
           return;
 
         } catch (error) {
@@ -327,7 +335,6 @@ async function getPoints() {
     const elements = jsonResponse.data;
 
     elements.forEach((element) => {
-      console.log(element);
 
       const format = new WKT();
       let feature;
@@ -369,6 +376,7 @@ async function getPoints() {
       }
     });
   } catch (error) {
+    toastrError('Error fetching points!');
     console.error('Error fetching points:', error);
   }
 }
@@ -382,11 +390,13 @@ const addPolygonButton = document.getElementById('addArea');
 
 addPointButton.addEventListener('click', () => {
   if (drawingMode === 'point') {
+    toastrInfo("Adding points deactivated.");
     disableInteraction();
     setButtonState(addPointButton, false);
     console.log("Should Show PopUp?: "+ shouldShowPopup);
     shouldShowPopup = true;
   } else {
+    toastrInfo("Adding points activated.");
     drawingMode = 'point';
     enablePointInteraction();
     setButtonState(addPointButton, true);
@@ -398,10 +408,12 @@ addPointButton.addEventListener('click', () => {
 
 addPolygonButton.addEventListener('click', () => {
   if (drawingMode === 'polygon') {
+    toastrInfo("Adding areas deactivated.");
     disableInteraction();
     setButtonState(addPolygonButton, false);
     shouldShowPopup = true;
   } else {
+    toastrInfo("Adding areas activated.");
     drawingMode = 'polygon';
     enablePolygonInteraction();
     setButtonState(addPolygonButton, true);
@@ -511,7 +523,7 @@ async function savePolygon(polygon,name) {
 
     const result = await response.json();
     console.log('Polygon saved successfully:', result);
-    success(result.message);
+    toastrSuccess(result.message);
 
     getPoints();
 
@@ -580,7 +592,7 @@ map.on('click', function (evt) {
 
           const result = await response.json();
           console.log('Point saved successfully:', result);
-          success(result.message);
+          toastrSuccess(result.message);
 
           getPoints();
 
@@ -718,7 +730,7 @@ function handleUpdateClick(event) {
 
             const result = await response.json();
             console.log('Point updated successfully:', result);
-            success(result.message);
+            toastrSuccess(result.message);
 
             fetchAndDisplayData(); 
             source.clear();
@@ -749,7 +761,7 @@ function handleDeleteClick(event) {
     })
     .then(result => {
       console.log('Point deleted successfully:', result);
-      success(result.message);
+      toastrSuccess(result.message);
       fetchAndDisplayData(); 
       source.clear();
       getPoints();
@@ -845,7 +857,7 @@ function handleManualUpdateClick(event) {
     
           const result = await response.json();
           console.log('Point updated successfully:', result);
-          success(result.message);
+          toastrSuccess(result.message);
           map.removeInteraction(modify);
           getPoints();
     
